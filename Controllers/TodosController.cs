@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToDoApi.DTOs;
+using ToDoApi.Models;
 
 namespace ToDoApi.Controllers
 {
@@ -7,7 +8,7 @@ namespace ToDoApi.Controllers
     [Route("api/[controller]")]
     public class TodosController : ControllerBase
     {
-        public static List<string> _todos = new List<string>(); 
+        public static List<Todo> _todos = new List<Todo>(); 
 
         [HttpGet()]
         public IActionResult GetTodos()
@@ -22,23 +23,41 @@ namespace ToDoApi.Controllers
         }
 
         [HttpPost()]
-        public IActionResult CreateTodo([FromBody] string msg)
+        public IActionResult CreateTodo([FromBody] TodoDTO todoDTO)
         {
-            _todos.Add(msg);
+            Todo t = new Todo();
+            t.Id = _todos.Count() + 1;
+            t.Title = todoDTO.Title;
+            t.Description = todoDTO.Description;
+            t.IsComplete = todoDTO.IsComplete;
+
+            _todos.Add(t);
             return Ok("Added");
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateTodo(int id, [FromBody] string msg)
+        public IActionResult UpdateTodo(int id, [FromBody] TodoDTO todoDTO)
         {
-            _todos[id] = msg;
+            Todo t = new();
+            t.Title = todoDTO.Title;
+            t.Description = todoDTO.Description;
+            t.IsComplete = todoDTO.IsComplete;
+
+            _todos[id] = t;
             return Ok(_todos);
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteTodo(int id)
         {
-            _todos.RemoveAt(id);
+
+            for(int i = 0; i < _todos.Count; i++)
+            {
+                if( _todos[i].Id == id)
+                {
+                    _todos.RemoveAt(i);
+                }
+            }
             return Ok("Removed");
         }
     }
