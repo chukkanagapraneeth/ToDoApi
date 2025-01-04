@@ -14,6 +14,16 @@ namespace ToDoApp
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddCors(
+                (options) =>
+                {
+                    options.AddPolicy("testCors", (corsBuilder) =>
+                    {
+                        corsBuilder.WithOrigins("http://localhost:5500").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                    });
+                }
+            );
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -22,6 +32,7 @@ namespace ToDoApp
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseCors("testCors");
 
             app.UseHttpsRedirection();
 

@@ -9,27 +9,27 @@ namespace ToDoApi.Controllers
     {
         public static List<string> _todos = new List<string>(); 
 
-        [HttpGet("/GetTodos")]
+        [HttpGet()]
         public IActionResult GetTodos()
         {
             return Ok(_todos);
         }
 
-        [HttpPost("/CreateTodo")]
+        [HttpPost()]
         public IActionResult CreateTodo([FromBody] string msg)
         {
             _todos.Add(msg);
             return Ok("Added");
         }
 
-        [HttpPut("/UpdateTodo")]
-        public IActionResult UpdateTodo([FromBody] UpdateDTO update)
+        [HttpPut("{id}")]
+        public IActionResult UpdateTodo(int id, [FromBody] string msg)
         {
-            _todos[update.Id] = update.msg;
+            _todos[id] = msg;
             return Ok(_todos);
         }
 
-        [HttpDelete("/DeleteTodo")]
+        [HttpDelete("{id}")]
         public IActionResult DeleteTodo(int id)
         {
             _todos.RemoveAt(id);
