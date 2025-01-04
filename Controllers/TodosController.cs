@@ -5,7 +5,7 @@ namespace ToDoApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TodoController : ControllerBase
+    public class TodosController : ControllerBase
     {
         public static List<string> _todos = new List<string>(); 
 
@@ -13,6 +13,12 @@ namespace ToDoApi.Controllers
         public IActionResult GetTodos()
         {
             return Ok(_todos);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetTodo(int id)
+        {
+            return Ok(_todos[id]);
         }
 
         [HttpPost()]
