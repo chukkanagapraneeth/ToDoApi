@@ -38,13 +38,16 @@ namespace ToDoApi.Controllers
         [HttpPut("{id}")]
         public IActionResult UpdateTodo(int id, [FromBody] TodoDTO todoDTO)
         {
-            Todo t = new();
-            t.Title = todoDTO.Title;
-            t.Description = todoDTO.Description;
-            t.IsComplete = todoDTO.IsComplete;
 
-            _todos[id] = t;
-            return Ok(_todos);
+            var todo = _todos.FirstOrDefault(x => x.Id == id);
+
+            if(todo != null)
+            {
+                todo.Title = todoDTO.Title;
+                todo.Description = todoDTO.Description;
+                todo.IsComplete = todoDTO.IsComplete;
+            }
+            return Ok(todo);
         }
 
         [HttpDelete("{id}")]
