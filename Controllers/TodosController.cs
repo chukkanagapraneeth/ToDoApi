@@ -19,20 +19,28 @@ namespace ToDoApi.Controllers
         [HttpGet("{id}")]
         public IActionResult GetTodo(int id)
         {
-            return Ok(_todos[id]);
+            var todo = _todos.FirstOrDefault(x => x.Id == id);
+            if (todo == null)
+            {
+                return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
+            }
+            return Ok(todo);
         }
 
         [HttpPost()]
         public IActionResult CreateTodo([FromBody] TodoDTO todoDTO)
         {
-            Todo t = new Todo();
-            t.Id = _todos.Count() + 1;
-            t.Title = todoDTO.Title;
-            t.Description = todoDTO.Description;
-            t.IsComplete = todoDTO.IsComplete;
+            Todo newTodo = new Todo();
+            newTodo.Id = _todos.Count() + 1;
+            newTodo.Title = todoDTO.Title;
+            newTodo.Description = todoDTO.Description;
+            newTodo.IsComplete = todoDTO.IsComplete;
 
-            _todos.Add(t);
-            return Ok("Added");
+            _todos.Add(newTodo);
+
+            // We should return 201 when a resource is created
+
+            return CreatedAtAction(nameof(GetTodo), new { id = newTodo.Id }, newTodo);
         }
 
         [HttpPut("{id}")]
@@ -41,27 +49,30 @@ namespace ToDoApi.Controllers
 
             var todo = _todos.FirstOrDefault(x => x.Id == id);
 
-            if(todo != null)
+            if(todo == null)
             {
-                todo.Title = todoDTO.Title;
-                todo.Description = todoDTO.Description;
-                todo.IsComplete = todoDTO.IsComplete;
+                return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
             }
+
+            todo.Title = todoDTO.Title;
+            todo.Description = todoDTO.Description;
+            todo.IsComplete = todoDTO.IsComplete;
             return Ok(todo);
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteTodo(int id)
         {
+            var todo = _todos.FirstOrDefault(x => x.Id == id);
 
-            for(int i = 0; i < _todos.Count; i++)
+            if(todo == null)
             {
-                if( _todos[i].Id == id)
-                {
-                    _todos.RemoveAt(i);
-                }
+                return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
             }
-            return Ok("Removed");
+
+            _todos.Remove(todo);
+
+            return Ok($"Todo with id {id} Removed Successfully.");
         }
     }
 }
