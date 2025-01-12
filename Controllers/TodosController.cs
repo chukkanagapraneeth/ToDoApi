@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ToDoApi.Data;
 using ToDoApi.DTOs;
 using ToDoApi.Models;
 
@@ -8,18 +9,24 @@ namespace ToDoApi.Controllers
     [Route("api/[controller]")]
     public class TodosController : ControllerBase
     {
-        public static List<Todo> _todos = new List<Todo>(); 
+        //public static List<Todo> _todos = new List<Todo>();
+        private readonly TodosDataContext _todoContext;
+        public TodosController(TodosDataContext context)
+        {
+            _todoContext = context;
+        }
 
         [HttpGet()]
         public IActionResult GetTodos()
         {
-            return Ok(_todos);
+            var todos = _todoContext.Todos.ToList();
+            return Ok(todos);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetTodo(int id)
         {
-            var todo = _todos.FirstOrDefault(x => x.Id == id);
+            var todo = _todoContext.Todos.Find(id);
             if (todo == null)
             {
                 return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
@@ -31,12 +38,13 @@ namespace ToDoApi.Controllers
         public IActionResult CreateTodo([FromBody] TodoDTO todoDTO)
         {
             Todo newTodo = new Todo();
-            newTodo.Id = _todos.Count() + 1;
             newTodo.Title = todoDTO.Title;
             newTodo.Description = todoDTO.Description;
             newTodo.IsComplete = todoDTO.IsComplete;
 
-            _todos.Add(newTodo);
+            _todoContext.Todos.Add(newTodo);
+
+            _todoContext.SaveChanges();
 
             // We should return 201 when a resource is created
 
@@ -47,7 +55,7 @@ namespace ToDoApi.Controllers
         public IActionResult UpdateTodo(int id, [FromBody] TodoDTO todoDTO)
         {
 
-            var todo = _todos.FirstOrDefault(x => x.Id == id);
+            var todo = _todoContext.Todos.Find(id);
 
             if(todo == null)
             {
@@ -57,20 +65,24 @@ namespace ToDoApi.Controllers
             todo.Title = todoDTO.Title;
             todo.Description = todoDTO.Description;
             todo.IsComplete = todoDTO.IsComplete;
+
+            _todoContext.SaveChanges();
+            
             return Ok(todo);
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteTodo(int id)
         {
-            var todo = _todos.FirstOrDefault(x => x.Id == id);
+            var todo = _todoContext.Todos.Find(id);
 
             if(todo == null)
             {
                 return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
             }
 
-            _todos.Remove(todo);
+            _todoContext.Todos.Remove(todo);
+            _todoContext.SaveChanges();
 
             return Ok($"Todo with id {id} Removed Successfully.");
         }
