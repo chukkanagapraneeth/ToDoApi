@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using ToDoApi.Data;
 using ToDoApi.DTOs;
 using ToDoApi.Models;
@@ -16,6 +18,7 @@ namespace ToDoApi.Controllers
             _todoContext = context;
         }
 
+        [Authorize(Policy = "ManagerOnly")]
         [HttpGet()]
         public IActionResult GetTodos()
         {
@@ -23,7 +26,26 @@ namespace ToDoApi.Controllers
             return Ok(todos);
         }
 
+        [HttpGet, Authorize]
+        [Route("MyName")]
+        public IActionResult GetMyName()
+        {
+            var userName = User.Identity?.Name;
+            return Ok(new {userName});
+        }
+
+        [HttpGet, Authorize]
+        [Route("MyTodos")]
+        public IActionResult GetMyTodos()
+        {
+            var user = User.FindFirst(ClaimTypes.Name)?.Value;
+            var myTodos = _todoContext.Todos.Where(x => x.UserId == user).ToList();
+
+            return Ok(myTodos);
+        }
+
         [HttpGet("{id}")]
+        [Authorize]
         public IActionResult GetTodo(int id)
         {
             var todo = _todoContext.Todos.Find(id);
@@ -34,13 +56,16 @@ namespace ToDoApi.Controllers
             return Ok(todo);
         }
 
-        [HttpPost()]
+        [HttpPost, Authorize]
         public IActionResult CreateTodo([FromBody] TodoDTO todoDTO)
         {
+            var userId = User.FindFirst(ClaimTypes.Name)?.Value;
+
             Todo newTodo = new Todo();
             newTodo.Title = todoDTO.Title;
             newTodo.Description = todoDTO.Description;
             newTodo.IsComplete = todoDTO.IsComplete;
+            newTodo.UserId = userId ?? "User0"; 
 
             _todoContext.Todos.Add(newTodo);
 
@@ -52,6 +77,7 @@ namespace ToDoApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public IActionResult UpdateTodo(int id, [FromBody] TodoDTO todoDTO)
         {
 
@@ -72,6 +98,7 @@ namespace ToDoApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public IActionResult DeleteTodo(int id)
         {
             var todo = _todoContext.Todos.Find(id);

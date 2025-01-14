@@ -1,6 +1,8 @@
-
 using Microsoft.EntityFrameworkCore;
 using ToDoApi.Data;
+using Microsoft.Identity.Web;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Client;
 
 namespace ToDoApp
 {
@@ -15,6 +17,13 @@ namespace ToDoApp
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ManagerOnly", policy => policy.RequireRole("Manager"));
+            });
+
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<TodosDataContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -40,7 +49,7 @@ namespace ToDoApp
             app.UseCors("testCors");
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
