@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using System.Security.Claims;
 using ToDoApi.Data;
 using ToDoApi.DTOs;
@@ -13,15 +14,18 @@ namespace ToDoApi.Controllers
     {
         //public static List<Todo> _todos = new List<Todo>();
         private readonly TodosDataContext _todoContext;
-        public TodosController(TodosDataContext context)
+        private readonly ILogger<TodosController> _logger;
+        public TodosController(TodosDataContext context, ILogger<TodosController> logger)
         {
             _todoContext = context;
+            _logger = logger;
         }
 
         [Authorize(Policy = "ManagerOnly")]
         [HttpGet()]
         public IActionResult GetTodos()
         {
+            _logger.LogInformation("GetTodos Method initiated");
             var todos = _todoContext.Todos.ToList();
             return Ok(todos);
         }
@@ -46,9 +50,10 @@ namespace ToDoApi.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        public IActionResult GetTodo(int id)
+        public async Task<IActionResult> GetTodo(int id)
         {
-            var todo = _todoContext.Todos.Find(id);
+            _logger.LogDebug($"{id}");
+            var todo = await _todoContext.Todos.FindAsync(id);
             if (todo == null)
             {
                 return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
@@ -59,13 +64,21 @@ namespace ToDoApi.Controllers
         [HttpPost, Authorize]
         public IActionResult CreateTodo([FromBody] TodoDTO todoDTO)
         {
+            _logger.LogDebug($"Todo {todoDTO}");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var userId = User.FindFirst(ClaimTypes.Name)?.Value;
 
             Todo newTodo = new Todo();
             newTodo.Title = todoDTO.Title;
             newTodo.Description = todoDTO.Description;
             newTodo.IsComplete = todoDTO.IsComplete;
-            newTodo.UserId = userId ?? "User0"; 
+            newTodo.UserId = userId ?? "User0";
+            newTodo.CreatedAt = DateTime.Now;
+            newTodo.LastModifiedAt = DateTime.Now;
+            newTodo.RemindAt = todoDTO.RemindAt;
 
             _todoContext.Todos.Add(newTodo);
 
@@ -80,17 +93,24 @@ namespace ToDoApi.Controllers
         [Authorize]
         public IActionResult UpdateTodo(int id, [FromBody] TodoDTO todoDTO)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var todo = _todoContext.Todos.Find(id);
+            var userId = User.FindFirst(ClaimTypes.Name)?.Value;
 
-            if(todo == null)
+            if(todo == null || todo.UserId != userId)
             {
-                return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
+                return Unauthorized($"You're not authorized to perform this action.");
             }
 
             todo.Title = todoDTO.Title;
             todo.Description = todoDTO.Description;
             todo.IsComplete = todoDTO.IsComplete;
+            todo.RemindAt = todoDTO.RemindAt;
+            todo.LastModifiedAt = DateTime.Now;
 
             _todoContext.SaveChanges();
             
@@ -102,10 +122,11 @@ namespace ToDoApi.Controllers
         public IActionResult DeleteTodo(int id)
         {
             var todo = _todoContext.Todos.Find(id);
+            var userId = User.FindFirst(ClaimTypes.Name)?.Value;
 
-            if(todo == null)
+            if(todo == null || todo.UserId != userId)
             {
-                return NotFound($"Todo with Id {id} not found. Please enter a valid id.");
+                return Unauthorized($"You're not authorized to perform this action.");
             }
 
             _todoContext.Todos.Remove(todo);

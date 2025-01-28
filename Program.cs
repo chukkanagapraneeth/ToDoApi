@@ -40,6 +40,14 @@ namespace ToDoApp
 
             var app = builder.Build();
 
+            app.Logger.LogDebug("Debuggggggg");
+            app.Logger.LogInformation("Inforrrrrrem");
+            app.Logger.LogWarning("Warnnnnnnnig");
+            app.Logger.LogCritical("Oopsy Critical");
+            app.Logger.LogError("Errorsy");
+
+
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

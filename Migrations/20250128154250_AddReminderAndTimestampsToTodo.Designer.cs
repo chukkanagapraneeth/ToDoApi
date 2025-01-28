@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ToDoApi.Data;
 
@@ -11,9 +12,11 @@ using ToDoApi.Data;
 namespace ToDoApi.Migrations
 {
     [DbContext(typeof(TodosDataContext))]
-    partial class TodosDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250128154250_AddReminderAndTimestampsToTodo")]
+    partial class AddReminderAndTimestampsToTodo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,7 +46,7 @@ namespace ToDoApi.Migrations
                     b.Property<DateTime>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("RemindAt")
+                    b.Property<DateTime>("RemindAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
